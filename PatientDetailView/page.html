@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./style.css">
+    <title id="title">ObsTrac-Details</title>
+</head>
+<body>
+    <h2>Patient Details</h2>
+    <div class="patient-details">
+        <div class="patient-bio">
+            <h3>Patient Bio</h3>
+            <pre id="bio"></pre>
+        </div>
+
+        <div class="patient-observations">
+            <h3>Patient Observations</h3>
+            <button id="recordMeasurement">Record Measurement</button>
+            <button id="recordObservation">Record Observation</button>
+            <ul id="observationlist">
+                <li class="observation">
+                    <span>1. John Patient</span>
+                    <button>Details</button>
+                </li>
+            </ul>
+        </div>
+    </div>    
+
+    
+    <button id="updatePatient">Update</button>
+    <button id="deletePatient">Delete</button>
+
+    <dialog id="updatePatientWindow">
+        <h2>Patient Info</h2>
+        <form id="patientForm" method="dialog"> 
+            <label for="name">Name:</label>
+            <input id="name" type="text" required> 
+            <br/>
+
+            <label for="dob">Date of Birth:</label>
+            <input id="dob" type="date" name="dob" required>
+            <br/>
+
+            <label for="notes">Notes:</label>
+            <br/>
+            <textarea id="notes" name="notes" rows="4" cols="50"></textarea>
+            <br/>
+            <button type="submit" id="submitButton">Submit</button>
+            <button type="button" id="closeButton">Cancel</button>
+        </form>
+    </dialog>
+
+    <script type="module" src="./script.js" defer></script>
+</body>
+</html>

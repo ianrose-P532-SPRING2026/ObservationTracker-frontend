@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./style.css">
+    <title>ObsTrac-Patients</title>
+</head>
+<body>
+    <h1>Registered Patients:</h1>
+
+    
+    <button id="newPatientButton">New Patient</button>
+
+    <dialog id="newPatientWindow">
+        <h2>Patient Info</h2>
+        <form id="patientForm" method="dialog"> 
+            <label for="name">Name:</label>
+            <input id="name" type="text" required> 
+            <br/>
+
+            <label for="dob">Date of Birth:</label>
+            <input id="dob" type="date" name="dob" required>
+            <br/>
+
+            <label for="notes">Notes:</label>
+            <br/>
+            <textarea id="notes" name="notes" rows="4" cols="50"></textarea>
+            <br/>
+            <button type="submit" id="submitButton">Submit</button>
+            <button type="button" id="closeButton">Cancel</button>
+        </form>
+    </dialog>
+
+    
+
+    <div class="patient-list">
+        <ul id="patientlist">
+            <li class="patient">
+                <span>1. John Patient</span>
+                <button>Details</button>
+            </li>
+        </ul>
+    </div>
+   
+
+    <script type="module" src="./script.js" defer></script>
+</body>
+</html>

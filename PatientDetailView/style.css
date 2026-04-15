@@ -1,0 +1,30 @@
+.patient-details {
+    display: flex;
+    justify-content: space-between;
+    margin: 0;
+    padding: 0;
+    padding-top: 20px;
+    max-width: 500px;
+    margin-right: auto;
+}
+
+.patient-bio {
+
+}
+
+.patient-observations {
+    flex: 1 1;
+    list-style: none;
+    position: relative;
+    padding: 0;
+    margin: 0;
+    max-width: 70%;
+}
+
+.observation {
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+    padding: 10px;
+    list-style-type: none;
+    background-color: #f9f9f9;
+}
