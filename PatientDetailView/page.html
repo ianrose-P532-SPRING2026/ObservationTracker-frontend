@@ -18,16 +18,17 @@
             <h3>Patient Observations</h3>
             <button id="recordMeasurement">Record Measurement</button>
             <button id="recordObservation">Record Observation</button>
+            <button id="EVAL">Evaluate Rules</button>
             <ul id="observationlist">
                 <li class="observation">
-                    <span>1. John Patient</span>
-                    <button>Details</button>
+                    <pre>
+
+                    </pre>    
                 </li>
             </ul>
         </div>
     </div>    
 
-    
     <button id="updatePatient">Update</button>
     <button id="deletePatient">Delete</button>
 
@@ -48,6 +49,65 @@
             <br/>
             <button type="submit" id="submitButton">Submit</button>
             <button type="button" id="closeButton">Cancel</button>
+        </form>
+    </dialog>
+
+
+    <dialog id="recordMeasurementWindow">
+        <h2>Measurement</h2>
+        <form id="measurementForm" method="dialog"> 
+
+            <label for="typeDropdown">Type:</label>
+            <select id="typeDropdown" required></select>
+            <br/>
+
+            <label for="protocolDropdownMEAS">Protocol(Optional):</label>
+            <select id="protocolDropdownMEAS"></select>
+            <br/>
+
+            <label for="amount">Value:</label>
+            <input id="amount" type="number" required> 
+            <select style="margin-bottom: 10px;" id="unitDropdown">
+                </select>
+            <br/>
+
+            <label for="endTime">Applic. End Time(Optional):</label>
+            <br/>
+            <input id="endTime" type="datetime-local" style="margin-bottom: 10px;">
+            <br/>
+
+            <button type="submit" id="submitButton">Submit</button>
+            <button type="button" id="closeButtonMEAS">Cancel</button>
+        </form>
+    </dialog>
+
+
+    <dialog id="recordObservationWindow">
+        <h2>Categorical Observation</h2>
+        <form id="categoricalForm" method="dialog"> 
+
+            <label for="phenomDropdown">Phenomenon:</label>
+            <select id="phenomDropdown" required></select>
+            <br/>
+
+            <label for="protocolDropdownCATE">Protocol(Optional):</label>
+            <select id="protocolDropdownCATE"></select>
+            <br/>
+
+            <select id="presenceDropdown" required>
+                <option value="PRESENT">PRESENT</option>
+                <option value="ABSENT">ABSENT</option>
+            </select>
+            <br/>
+
+
+            <label for="endTime">Applic. End Time(Optional):</label>
+            <br/>
+            <input id="endTime" type="datetime-local" style="margin-bottom: 10px;">
+            <br/>
+
+            <button type="submit" id="submitButton">Submit</button>
+            <button type="button" id="closeButtonCATE">Cancel</button>
         </form>
     </dialog>
 

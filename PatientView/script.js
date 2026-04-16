@@ -70,7 +70,7 @@ function fillList(list, patients) {
         
         const detailsButton = document.createElement('button');
         detailsButton.addEventListener('click', function() {
-            openPatientDetails(patient.id);
+            openPatientDetails(patient.patientId);
         });
         detailsButton.innerHTML = "Details";
         li.appendChild(detailsButton);
@@ -82,7 +82,7 @@ function fillList(list, patients) {
 
 function buildPatientListEntry(li, patient){
     const patientText = document.createElement('span');
-    patientText.innerHTML=`${patient.id}: ${patient.fullName}`;
+    patientText.innerHTML=`${patient.patientId}: ${patient.fullName}`;
     li.appendChild(patientText);
 }
 

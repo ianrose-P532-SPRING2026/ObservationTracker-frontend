@@ -21,6 +21,11 @@
     max-width: 70%;
 }
 
+.patient-observations ul {
+    height: 600px; 
+    overflow: scroll;
+}
+
 .observation {
     border: 1px solid #ccc;
     margin-bottom: 10px;

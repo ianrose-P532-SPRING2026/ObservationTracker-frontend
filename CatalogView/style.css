@@ -1,0 +1,66 @@
+.thing {
+    display: flex;
+    justify-content: space-between;
+    margin: 0;
+    padding: 0;
+    padding-top: 20px;
+    max-width: 1500px;
+    margin-right: auto;
+}
+
+.col {
+    flex: 1 1;
+    list-style: none;
+    position: relative;
+    padding: 0;
+    margin: 0;
+    max-width: 80%;
+    border: 1px solid #ccc;
+}
+
+.catalog-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 0;
+    height: 600px; 
+    overflow: scroll;
+}
+
+.protocol {
+    border: 1px solid #ccc;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.type {
+    border: 1px solid #ccc;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.rule {
+    border: 1px solid #ccc;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.unit {
+    border: 1px solid #ccc;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.phenom-selector {
+    border: 1px solid #ccc;
+    margin: 10px;
+}
+
+.unit-selector {
+    border: 1px solid #ccc;
+    margin: 10px;
+}
+
+.arg-selector {
+    border: 1px solid #ccc;
+    margin: 10px;
+}

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./style.css">
+    <title>ObsTrac-Catalog</title>
+</head>
+<body>
+
+    
+    <h1 style="margin-bottom: 0;">Catalog Management</h1>
+
+    <a href="../index.html">Back to home</a>
+
+    <div class="thing">
+
+
+
+        <div class="col">
+            <strong>Rules</strong>
+            <button id="rulesButton">New</button>
+            <ul id="rulesList" class="catalog-list">
+                <li class="rule">
+                     <strong>ID. RuleName</strong>
+                     <br/>
+                     <span>Diagnosis: TypeName-ProductName</span>
+                     <br/>
+                     <span>Criteria:</span>
+                     <ul>
+                        <li>TypeName-PhenomenaName</li>
+                        <li>BloodType-B</li>
+                     </ul>
+                </li>
+            </ul>
+        </div>
+
+
+
+        <div class="col">
+            <strong>Phenomena Types</strong>
+            <button id="typeButtonQUAL">New Qualitative</button>
+            <button id="typeButtonQUANT">New Quantitative</button>
+            <ul id="typeList" class="catalog-list">
+                <li class="type">
+                    <strong>ID. QualitativeType</strong>
+                    <br/>
+                    <span>Type: QUALITATIVE</span>
+                    <br/>
+                    <span>Phenomena:</span>
+                    <ul>
+                        <li>Something</li>
+                        <li>Some other thing</li>
+                    </ul>
+                </li>
+                <li class="type">
+                    <strong>ID. QuantitativeType</strong>
+                    <br/>
+                    <span>Type: QUANTITATIVE</span>
+                    <br/>
+                    <span>Allowed Units:</span>
+                    <ul>
+                        <li>mm</li>
+                        <li>km</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+
+
+        <div class="col">
+            <strong>Protocols</strong>
+            <button id="buttonPROTOCOL">New</button>
+            <ul id="protocolList" class="catalog-list">
+                <li class="protocol">
+                    <strong>ID. ProtocolName</strong>
+                    <br/>
+                    <pre>   
+protocol desc
+this is wehre i write stuff
+see.
+                    </pre>
+                    <span>Accuracy: HIGH</span>
+                </li>
+            </ul>
+        </div>
+
+
+
+        <div class="col">
+            <strong>Units</strong>
+            <button id="buttonUNIT">New</button>
+            <button id="buttonUNITMANAGE">Edit Conversions</button>
+            <ul id="unitList" class="catalog-list">
+                <li class="unit">
+                    <strong>ID. Unit1</strong>
+                    <br/>
+                    <span>Conversion Ratios:</span>
+                    <ul>
+                        <li>Unit1 = 5.3*Unit2 </li>
+                        <li>Unit2 = 7.5*Unit2 </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        
+    </div>
+
+    
+    <dialog id="windowPROTOCOL">
+        <h2>Protocol</h2>
+        <form id="formPROTOCOL" method="dialog"> 
+            <label for="name">Name:</label>
+            <input id="name" type="text" required> 
+            <br/>
+
+            <label for="desc">Description:</label>
+            <br/>
+            <textarea id="desc" rows="4" cols="50"></textarea>
+            <br/>
+
+            <label for="accuracyRating">Accuracy: </label>
+            <select id="accuracyRating" required>
+                <option value="HIGH">High</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="LOW">Low</option>
+            </select>
+
+            <br/>
+
+            <button type="submit" id="submitButtonPROTOCOL">Submit</button>
+            <button type="button" id="closeButtonPROTOCOL">Cancel</button>
+        </form>
+    </dialog>
+
+    
+    <dialog id="windowUNITS">
+        <h2>Unit</h2>
+        <form id="formUNITS" method="dialog"> 
+            <label for="symbol">Symbol:</label>
+            <input id="symbol" type="text" required> 
+            
+            <button type="submit" id="submitButtonUNITS">Submit</button>
+            <button type="button" id="closeButtonUNITS">Cancel</button>
+        </form>
+    </dialog>
+
+
+    <dialog id="windowQUAL">
+        <h2>Qualitative Phenomenon Type</h2>
+        <form id="formQUAL" method="dialog"> 
+            <label for="name">Name:</label>
+            <input id="name" type="text" required> 
+            <br/>
+
+            <div class="phenom-selector">
+                <input id="phenom" type="text" size="10" style="margin-top: 10px; margin-left: 10px;">
+                <button id="addPhenomButton" type="button">+</button>
+                <hr>
+                <ul id="loadedPhenomenaList" style="margin: 0;">
+                    <li style="text-align: center; list-style-type: none;">(none)</li>
+                </ul>
+            </div>
+            
+            
+            
+            <button type="submit" id="submitButton">Submit</button>
+            <button type="button" id="closeButtonQUAL">Cancel</button>
+        </form>
+    </dialog>
+
+
+    <dialog id="windowQUANT">
+        <h2>Quantitative Phenomenon Type</h2>
+        <form id="formQUANT" method="dialog"> 
+            <label for="name">Name:</label>
+            <input id="name" type="text" required>
+
+            <div class="unit-selector">
+                <select id="unitDropdown">
+                </select>
+                <button id="addUnitButton" type="button">+</button>
+                <hr>
+                <ul id="loadedUnitList" style="margin: 0;">
+                    <li style="text-align: center; list-style-type: none;">(none)</li>
+                </ul>
+            </div>
+            
+            <button type="submit" id="submitButton">Submit</button>
+            <button type="button" id="closeButtonQUANT">Cancel</button>
+        </form>
+    </dialog>
+
+
+    <dialog id="windowRULE">
+        <h2>Diagnosis Rule</h2>
+        <form id="formRULE" method="dialog"> 
+            <label for="name">Name:</label>
+            <input id="name" type="text" required>
+            <br/>
+
+            <label for="productDropdown">Product: </label>
+            <select id="productDropdown">   
+            </select>
+            <br/>
+
+            <span>Criteria: </span>
+            <div class="arg-selector">
+                <select id="argDropdown">
+                </select>
+                <button id="addArgButton" type="button">+</button>
+                <hr>
+                <ul id="loadedArgList" style="margin: 0;">
+                    <li style="text-align: center; list-style-type: none;">(none)</li>
+                </ul>
+            </div>
+            
+            <button type="submit" id="submitButton">Submit</button>
+            <button type="button" id="closeButtonRULE">Cancel</button>
+        </form>
+    </dialog>
+
+    <!--
+    <dialog id="window">
+        <h2>Protocol</h2>
+        <form id="form" method="dialog"> 
+            <label for="symbol">Symbol:</label>
+            <input id="symbol" type="text" required> 
+            
+            <button type="submit" id="submitButton">Submit</button>
+            <button type="button" id="closeButton">Cancel</button>
+        </form>
+    </dialog>
+    -->
+
+    <script type="module" src="./script.js" defer></script>
+</body>
+</html>
