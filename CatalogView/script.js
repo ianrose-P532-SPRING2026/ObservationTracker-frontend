@@ -474,7 +474,7 @@ function buildUnitListing(li, unit) {
     } else {
         Object.entries(unit.toRatios).forEach(([target, ratio]) => {
             const subli = document.createElement('li');
-            subli.innerHTML = `${unit.symbol} = ${ratio}*${target}`;
+            subli.innerHTML = `1${unit.symbol} = ${ratio}${target}`;
             sublist.appendChild(subli);                       
         });
     }

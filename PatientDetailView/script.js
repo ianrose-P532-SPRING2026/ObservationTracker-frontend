@@ -2,35 +2,51 @@ import { host } from "../host.js"
 
 let sender = 1; //TheGuy
 
-const params = new URLSearchParams(window.location.search);
-let patient = await getPatient(params.get("id"));
 
-const form = document.getElementById("patientForm");
+//--------------------------------------------------V-LIST POPULATING-V-------------------------------------------------
+
+function fillGenericList(list, content, builder) {
+    //setting to default
+    if(content.length == 0){
+        list.innerHTML = `<li style="text-align: center; list-style-type: none;">(none)</li>`;
+        return;
+    }
+    list.innerHTML = ""; //clear all before populating
+
+    //populating
+    content.forEach(item => {
+        const li = document.createElement('li');
+        builder(li, item);
+        list.appendChild(li);                       
+    });
+}
+
+//--------------------------------------------------^-LIST POPULATING-^-------------------------------------------------
 
 
-populateBio();
 
-const updatePatientWindow = document.getElementById("updatePatientWindow");
-const updatePatient = document.getElementById("updatePatient");
-updatePatient.addEventListener('click', function() {
-    updatePatientWindow.showModal();
-    form.name.value = patient.fullName;
-    form.dob.value = new Date(patient.dob).toISOString().split('T')[0];
-    form.notes.value = patient.notes;
-});
 
-const closeButton = document.getElementById("closeButton");
-closeButton.addEventListener('click', function() {
-    updatePatientWindow.close();
-});
 
-form.onsubmit = async function() {
-    const dob = new Date(form.dob.value);
-    const dobInstant = dob.toISOString();
-    const result = await submitUpdatePatient(sender, patient.patientId, form.name.value, dobInstant, form.notes.value);
-    alert(result);
-    await populateBio();
-};
+
+
+
+
+
+
+
+
+//-------------------------------------------------V-BACKEND REQUESTS-V-------------------------------------------------
+
+async function getPatient(id) {
+    const response = await fetch(host + "/patients/" + id);
+    if (!response.ok) {
+        throw new Error(`Response status: ${response.status}`);
+    }
+    const patient = await response.json();
+
+    return patient;
+}
+
 
 
 async function submitDeletePatient(sender, patientId, name, dob, notes) {
@@ -50,74 +66,6 @@ async function submitDeletePatient(sender, patientId, name, dob, notes) {
     return result;
 }
 
-async function submitUpdatePatient(sender, patientId, name, dob, notes) {
-    const PatientRequest = {sender: sender, patientId: patientId, name: name, dob: dob, notes: notes};
-    console.log("You entered: " + JSON.stringify(PatientRequest));
-
-    const request = {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(PatientRequest)
-    };
-
-    const response = await fetch(host + "/patients/" + patientId + "/update", request);
-    const result = await response.text();
-    return result;
-}
-
-async function getPatient(id) {
-    const response = await fetch(host + "/patients/" + id);
-    if (!response.ok) {
-        throw new Error(`Response status: ${response.status}`);
-    }
-    const patient = await response.json();
-
-    return patient;
-}
-
-async function populateBio() {
-    patient = await getPatient(params.get("id"));
-
-    const title = document.getElementById("title");
-    title.innerHTML = `ObsTrac-${patient.fullName}`
-    const formatter = new Intl.DateTimeFormat('en-US', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-    });
-    const dob = new Date(patient.dob);
-    
-    const bio = document.getElementById("bio");
-    bio.innerHTML = `
-ID: ${patient.patientId}
-Name: ${patient.fullName}
-DOB: ${formatter.format(dob)}
-Notes:
-${patient.notes}`
-
-    if (patient.relatedObservations.length == 0) {
-        const deletePatient = document.getElementById("deletePatient");
-        deletePatient.addEventListener('click', async function() {
-            if(confirm("Are you sure you want to delete this patient?")){
-                const result = await submitDeletePatient(sender, patient.patientId, patient.fullName, patient.dob, patient.notes);
-                alert(result);
-                window.close();
-            }
-        });
-    } else{
-        const deletePatient = document.getElementById("deletePatient");
-        deletePatient.innerHTML = "Archive";
-        deletePatient.addEventListener('click', async function() {
-            if(confirm("Are you sure you want to archive this patient?")){
-                const result = await submitArchivePatient(sender, patient.patientId, patient.fullName, patient.dob, patient.notes);
-                alert(result);
-                window.close();
-            }
-        });
-    }
-}
 
 
 async function submitArchivePatient(sender, patientId, name, dob, notes) {
@@ -137,81 +85,53 @@ async function submitArchivePatient(sender, patientId, name, dob, notes) {
     return result;
 }
 
-const observationlist = document.getElementById("observationlist");
 
-async function getPatientObservations() {
+
+async function submitUpdatePatient(sender, patientId, name, dob, notes) {
+    const PatientRequest = {sender: sender, patientId: patientId, name: name, dob: dob, notes: notes};
+    console.log("You entered: " + JSON.stringify(PatientRequest));
+
+    const request = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(PatientRequest)
+    };
+
+    const response = await fetch(host + "/patients/" + patientId + "/update", request);
+    const result = await response.text();
+    return result;
+}
+
+
+
+async function getPatientObservations(patient) {
     const response = await fetch(host + "/patients/"+ patient.patientId + "/observations");
     if (!response.ok) {
         throw new Error(`Response status: ${response.status}`);
     }
     const observations = await response.json();
-
-    fillList(observationlist, observations)
-}
-
-async function rejectObservation(observation) {
-    console.log(observation);
-}
-
-function fillList(list, observations) {
-    //setting to default
-    if(observations.length == 0){
-        list.innerHTML = `<li style="text-align: center; list-style-type: none;">(none)</li>`;
-        return;
-    }
-    list.innerHTML = ""; //clear all before populating
-
-    //populating
-    observations.forEach(observation => {
-        const li = document.createElement('li');
-        li.classList.add("observation");
-        buildObservation(li, observation);
-        
-        const rejectButton = document.createElement('button');
-        rejectButton.addEventListener('click', async function() {
-            rejectObservation(observation);
-        });
-        rejectButton.innerHTML = "Reject";
-        li.appendChild(rejectButton);
-
-        list.appendChild(li);                       
-    });
+    return observations;
 }
 
 
-function buildObservation(li, observation){
-    const patientText = document.createElement('pre');
-    if (observation.quantOrQual == "QUANTITATIVE"){
-        patientText.innerHTML=`Id: ${observation.observationId}.
-Protocol: ${observation.protocol.name}
-Type: ${observation.phenomenonType.name}
-Time: ${observation.recordingTime}
-endTime: ${observation.applicabilityTime}
-Status: ${observation.status}
-RejectorId: ${observation.rejectorId}
+async function submitObservationRejection(observationId, rejectorIds, reason) {
+    const RejectionRequest = {sender: sender, observationId: observationId, rejectorIds: rejectorIds, reason: reason};
+    console.log("You entered: " + JSON.stringify(RejectionRequest));
 
-QUANT:
-Unit: ${observation.unit.symbol}
-Amount: ${observation.amount}`
+    const request = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(RejectionRequest)
+    };
 
-    } else {
-        patientText.innerHTML=`Id: ${observation.observationId}.
-Protocol: ${observation.protocol.name}
-Type: ${observation.phenomenonType.name}
-Time: ${observation.recordingTime}
-endTime: ${observation.applicabilityTime}
-Status: ${observation.status}
-RejectorId: ${observation.rejectorId}
-
-QUAL:
-Phenomenon: ${observation.phenomenon.name}
-Presence: ${observation.presence}`;
-    }
-    
-li.appendChild(patientText);
+    const response = await fetch(host + "/observations/rejection", request);
+    const result = await response.text();
+    return result;
 }
-
-getPatientObservations();
 
 
 
@@ -225,6 +145,8 @@ async function getAllTypes() {
     return types;
 }
 
+
+
 async function getAllProtocols() {
     const response = await fetch(host + "/catalogue/protocols");
     if (!response.ok) {
@@ -234,85 +156,6 @@ async function getAllProtocols() {
 
     return protocols;
 }
-
-
-
-const typeDropdown = document.getElementById("typeDropdown");
-
-async function fillTypeOptions() {
-    const types = await getAllTypes();
-    typeDropdown.innerHTML = ``;
-
-    types.forEach(type => {
-        if(type.category == "QUANTITATIVE"){
-            const option = document.createElement("option"); 
-            option.value = JSON.stringify(type); ; 
-            option.textContent = type.name;
-            typeDropdown.appendChild(option);
-        }
-    });
-}
-
-typeDropdown.addEventListener("change", function(event) {
-    const selectedType = JSON.parse(event.target.value); 
-    fillUnitOptions(selectedType.allowedUnits)
-});
-
-const unitDropdown = document.getElementById("unitDropdown");
-
-async function fillUnitOptions(units) {
-    unitDropdown.innerHTML = ``;
-
-    units.forEach(unit => {
-        const option = document.createElement("option"); 
-        option.value = unit.id; 
-        option.textContent = unit.symbol;
-        unitDropdown.appendChild(option);
-    });
-}
-
-const protocolDropdownMEAS = document.getElementById("protocolDropdownMEAS");
-async function fillProtocolOptionsMEAS() {
-    const protocols = await getAllProtocols();
-    protocolDropdownMEAS.innerHTML = ``;
-
-    protocols.forEach(protocol => {
-        const option = document.createElement("option"); 
-        option.value = protocol.id; 
-        option.textContent = protocol.name;
-        protocolDropdownMEAS.appendChild(option);
-    });
-}
-
-
-const recordMeasurementWindow = document.getElementById("recordMeasurementWindow");
-
-const recordMeasurement = document.getElementById("recordMeasurement");
-recordMeasurement.addEventListener('click', function() {
-    fillTypeOptions();
-    fillProtocolOptionsMEAS();
-    recordMeasurementWindow.showModal();
-});
-
-const closeButtonMEAS = document.getElementById("closeButtonMEAS");
-
-closeButtonMEAS.addEventListener('click', function() {
-        recordMeasurementWindow.close();
-});
-
-const measurementForm = document.getElementById("measurementForm");
-measurementForm.onsubmit = async function() {
-    let endTimeInstant;
-    if (measurementForm.endTime.value === ""){
-        endTimeInstant = null;
-    } else {
-        const endTime = new Date(measurementForm.endTime.value);
-        endTimeInstant = endTime.toISOString();
-    }
-    
-    const result = await submitCreateMeasurement(sender, patient.patientId, protocolDropdownMEAS.value, endTimeInstant, JSON.parse(typeDropdown.value).id, unitDropdown.value, measurementForm.amount.value);
-    alert(result);
-};
 
 
 
@@ -335,33 +178,6 @@ async function submitCreateMeasurement(sender, patientId, protocolId, applicabil
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const protocolDropdownCATE = document.getElementById("protocolDropdownCATE");
-
-const recordObservation = document.getElementById("recordObservation");
-recordObservation.addEventListener('click', function() {
-    fillPhenomOptions();
-    fillProtocolOptionsCATE();
-    recordObservationWindow.showModal();
-});
-
-
-const phenomDropdown = document.getElementById("phenomDropdown");
-
 async function getAllPhenomena() {
     const response = await fetch(host + "/catalogue/phenomena");
         if (!response.ok) {
@@ -372,57 +188,10 @@ async function getAllPhenomena() {
         return phenomena;
 }
 
-async function fillPhenomOptions() {
-    const types = await getAllPhenomena();
-    phenomDropdown.innerHTML = ``;
-
-    types.forEach(phenomenon => {
-        const option = document.createElement("option"); 
-        option.value = phenomenon.id; 
-        option.textContent = phenomenon.name;
-        phenomDropdown.appendChild(option);
-    });
-}
-
-async function fillProtocolOptionsCATE() {
-    const protocols = await getAllProtocols();
-    protocolDropdownCATE.innerHTML = ``;
-
-    protocols.forEach(protocol => {
-        const option = document.createElement("option"); 
-        option.value = protocol.id; 
-        option.textContent = protocol.name;
-        protocolDropdownCATE.appendChild(option);
-    });
-}
-
-const recordObservationWindow = document.getElementById("recordObservationWindow");
-
-const closeButtonCATE = document.getElementById("closeButtonCATE");
-closeButtonMEAS.addEventListener('click', function() {
-        recordObservationWindow.close();
-});
 
 
-const categoricalForm = document.getElementById("categoricalForm");
-categoricalForm.onsubmit = async function() {
-    let endTimeInstant;
-    if (measurementForm.endTime.value === ""){
-        endTimeInstant = null;
-    } else {
-        const endTime = new Date(measurementForm.endTime.value);
-        endTimeInstant = endTime.toISOString();
-    }
-    
-    const result = await submitCreateCategorical(sender, patient.patientId, protocolDropdownCATE.value, endTimeInstant, phenomDropdown.value, categoricalForm.presenceDropdown.value);
-    alert(result);
-};
-
-
-
-
-async function submitCreateCategorical(sender, patientId, protocolId, applicabilityTimeEnd, phenomenonId, presence) {
-    const CategoricalRequest = {sender: sender, patientId: patientId, protocolId: protocolId, recordingTime: null, applicabilityTimeEnd: applicabilityTimeEnd, phenomenonId: phenomenonId, presence: presence};
+async function submitCreateCategorical(sender, patientId, protocolId, applicabilityTimeEnd, phenomenonId, presence, evidenceIds, details) {
+    const CategoricalRequest = {sender: sender, patientId: patientId, protocolId: protocolId, recordingTime: null, applicabilityTimeEnd: applicabilityTimeEnd, phenomenonId: phenomenonId, presence: presence, evidenceIds: evidenceIds, details: details};
     console.log("You entered: " + JSON.stringify(CategoricalRequest));
 
     const request = {
@@ -438,26 +207,911 @@ async function submitCreateCategorical(sender, patientId, protocolId, applicabil
     return result;
 }
 
+//-------------------------------------------------^-BACKEND REQUESTS-^-------------------------------------------------
 
 
-const EVAL = document.getElementById("EVAL");
-EVAL.addEventListener('click', async function() {
-        await evaluateThem();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//---------------------------------------------------V-PATIENT INFO-V---------------------------------------------------
+
+//-------------------GETTING FROM URL-------------------
+const params = new URLSearchParams(window.location.search);
+let globalPatient = await getPatient(params.get("id"));
+
+
+
+//-------------------FILLING IN PAGE-------------------
+async function populateBio() {
+    globalPatient = await getPatient(params.get("id"));
+    fillOutBio(globalPatient);
+}
+
+async function fillOutBio(patient) {
+    //set tab name
+    const title = document.getElementById("title");
+    title.innerHTML = `ObsTrac-${patient.fullName}`
+
+    //Patient name
+    const patientNameText = document.getElementById("patientNameText");
+    patientNameText.innerHTML = `Name: ${patient.fullName}`;
+
+    //Patient DOB
+    const dobText = document.getElementById("dobText");
+    const formatter = new Intl.DateTimeFormat('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
+    const dob = new Date(patient.dob);
+    const formattedDOB = formatter.format(dob);
+    dobText.innerHTML = `Date of birth: ${formattedDOB}`;
+
+    //Patient notes
+    const patientNotesText = document.getElementById("patientNotesText");
+    patientNotesText.value = patient.notes;
+    
+    //setting delete/archive button
+    const delOrArcButton = document.getElementById("delOrArcButton");
+    if (patient.relatedObservations.length == 0) {
+        delOrArcButton.innerHTML = "DELETE";
+        delOrArcButton.addEventListener('click', patientDeleteButtonFunc);
+    } 
+    else {
+        delOrArcButton.innerHTML = "ARCHIVE";
+        delOrArcButton.addEventListener('click', patientArchiveButtonFunc);
+    }
+}
+
+
+//-------------------DEL/ARC BUTTON FUNCTIONS-------------------
+async function patientDeleteButtonFunc() {
+    if(confirm("Are you sure you want to delete this patient?")){
+        const result = await submitDeletePatient(sender, globalPatient.patientId, globalPatient.fullName, globalPatient.dob, globalPatient.notes);
+        alert(result);
+        window.close();
+    }
+}
+async function patientArchiveButtonFunc() {
+    if(confirm("Are you sure you want to archive this patient?")){
+        const result = await submitArchivePatient(sender, globalPatient.patientId, globalPatient.fullName, globalPatient.dob, globalPatient.notes);
+        alert(result);
+        window.close();
+    }
+}
+
+//---------------------------------------------------^-PATIENT INFO-^---------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//--------------------------------------------------V-UPDATE DIALOG-V---------------------------------------------------
+
+const updatePatientWindow = document.getElementById("updatePatientWindow");
+const updatePatientForm = document.getElementById("updatePatientForm");
+
+//-------------------CLOSING-------------------
+const closeUpdateButton = document.getElementById("closeUpdateButton");
+closeUpdateButton.addEventListener('click', function() {
+    updatePatientWindow.close();
 });
 
 
 
-async function evaluateThem() {
+//-------------------OPENING-------------------
+const openPatientUpdateButton = document.getElementById("openPatientUpdateButton");
+openPatientUpdateButton.addEventListener('click', patientUpdateButtonFunc);
+
+async function patientUpdateButtonFunc() {
+    updatePatientWindow.showModal();
+    updatePatientForm.name.value = globalPatient.fullName;
+    updatePatientForm.dob.value = new Date(globalPatient.dob).toISOString().split('T')[0];
+    updatePatientForm.notes.value = globalPatient.notes;
+}
+
+
+
+//-------------------SUBMISSION-------------------
+updatePatientForm.onsubmit = async function() {
+    const dob = new Date(updatePatientForm.dob.value);
+    const dobInstant = dob.toISOString();
+    const result = await submitUpdatePatient(sender, globalPatient.patientId, updatePatientForm.name.value, dobInstant, updatePatientForm.notes.value);
+    alert(result);
+    await populateBio();
+};
+
+//--------------------------------------------------^-UPDATE DIALOG-^---------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//---------------------------------------------V-PATIENT OBSERVATION LIST-V---------------------------------------------
+
+const observationlist = document.getElementById("observationlist");
+
+async function populateObservationList() {
+    const observations = await getPatientObservations(globalPatient);
+    fillGenericList(observationlist, observations, buildObservationEntry);
+}
+
+//building each entry
+function buildObservationEntry(li, observation){
+    console.log(observation);
+    li.classList.add("observation");
+    
+    li.appendChild(obsHeader(observation))
+    li.appendChild(obsContent(observation));
+    li.appendChild(obsProtocol(observation));
+    li.appendChild(obsStatus(observation));
+    li.appendChild(obsTime(observation));
+    li.appendChild(obsButtons(observation));
+}
+
+function obsHeader(observation) {
+    const div = document.createElement("div");
+    div.classList.add("obs-header");
+    
+    const idSpan = document.createElement("span");
+    idSpan.innerHTML = `ID: ${observation.observationId}`;
+
+    const typeSpan = document.createElement("span");
+    typeSpan.innerHTML = `Observation Type: ${observation.quantOrQual}`;
+
+    div.appendChild(idSpan);
+    div.appendChild(typeSpan);
+
+    return div;
+}
+
+function obsContent(observation) {
+    if (observation.quantOrQual == "QUANTITATIVE"){
+        return measurementContent(observation);
+    } else {
+        return categoricalContent(observation);
+    }
+}
+
+
+function measurementContent(observation) {
+    const div = document.createElement("div");
+    div.classList.add("obs-content");
+
+    const typeStrong = document.createElement("strong");
+    typeStrong.innerHTML = `${observation.phenomenonType.name}: `;
+
+    const amountSpan = document.createElement("span");
+    amountSpan.innerHTML = `${observation.amount}${observation.unit.symbol}`;
+
+    div.appendChild(typeStrong);
+    div.appendChild(amountSpan);
+
+    return div;
+}
+
+function categoricalContent(observation) {
+    const div = document.createElement("div");
+    div.classList.add("obs-content");
+
+    const typeStrong = document.createElement("strong");
+    typeStrong.innerHTML = `${observation.phenomenonType.name}: `;
+
+    const phenomSpan = document.createElement("span");
+    phenomSpan.innerHTML = `${observation.presence} ${observation.phenomenon.name}`
+
+    div.appendChild(typeStrong);
+    div.appendChild(phenomSpan);
+
+    return div;
+}
+
+function obsProtocol(observation) {
+    const div = document.createElement("div");
+    div.classList.add("obs-protocol");
+
+    if (observation.protocol == null){
+        const noneLabel = document.createElement("span");
+        noneLabel.innerHTML = "Protocol: (None)";
+        div.appendChild(noneLabel);
+        return div;
+    }
+
+    const detail = document.createElement("details");
+
+    const summary = document.createElement("summary");
+    summary.innerHTML = `Protocol: ${observation.protocol.name}`;
+
+    const inner = document.createElement("div");
+
+    const desc = document.createElement("pre");
+    desc.innerHTML = `${observation.protocol.description}`;
+
+    const rating = document.createElement("span");
+    rating.innerHTML = `Accuracy: ${observation.protocol.accuracyRating}`;
+
+    inner.appendChild(desc);
+    inner.appendChild(rating);
+
+    detail.appendChild(summary);
+    detail.appendChild(inner);
+
+    div.appendChild(detail);
+
+    return div;
+}
+
+function obsRejection(observation) {
+    const div = document.createElement("div");
+    div.classList.add("rejection");
+
+    const detail = document.createElement("details");
+
+    const summary = document.createElement("summary");
+    summary.innerHTML = `<strong>Status: REJECTED</strong>`;
+
+    const inner = document.createElement("div");
+
+    const label = document.createElement("span");
+    label.innerHTML = `Rejected by:`;
+
+    const sublist = document.createElement("ul");
+    for (const [id, summary] of Object.entries(observation.rejectors)) {
+        const li = document.createElement('li');
+        li.innerHTML = `${summary}`;
+        sublist.appendChild(li);
+    }
+
+    const reasonLabel = document.createElement("p");
+    reasonLabel.innerHTML = `Reason:`;
+
+    const reason = document.createElement("pre");
+    reason.innerHTML = `${observation.rejectionReason}`;
+
+    inner.appendChild(label);
+    inner.appendChild(sublist);
+    inner.appendChild(reasonLabel);
+    inner.appendChild(reason);
+
+    detail.appendChild(summary);
+    detail.appendChild(inner);
+
+    div.appendChild(detail);
+
+    return div;
+}
+
+
+function obsEvidence(observation) {
+    const div = document.createElement("div");
+    div.classList.add("evidence");
+
+    const detail = document.createElement("details");
+
+    const summary = document.createElement("summary");
+    summary.innerHTML = `<strong>Status: ACTIVE</strong>`;
+
+    const inner = document.createElement("div");
+
+    const label = document.createElement("span");
+    label.innerHTML = `Supported by:`;
+
+    const sublist = document.createElement("ul");
+
+    for (const [id, summary] of Object.entries(observation.supporters)) {
+        const li = document.createElement('li');
+        li.innerHTML = `${summary}`;
+        sublist.appendChild(li);
+    }
+
+    const reasonLabel = document.createElement("p");
+    reasonLabel.innerHTML = `Details:`;
+
+    const reason = document.createElement("pre");
+    reason.innerHTML = `${observation.evidenceDetails}`;
+
+    inner.appendChild(label);
+    inner.appendChild(sublist);
+    inner.appendChild(reasonLabel);
+    inner.appendChild(reason);
+
+    detail.appendChild(summary);
+    detail.appendChild(inner);
+
+    div.appendChild(detail);
+
+    return div;
+}
+
+
+function obsStatus(observation) {
+    if (observation.status == "ACTIVE") {
+        return obsEvidence(observation);
+    } else {
+        return obsRejection(observation);
+    }
+}
+
+function obsTime(observation) {
+    const div = document.createElement("div");
+    div.classList.add("obs-time");
+
+    //if (observation.applicabilityTime == observation.recordingTime)
+
+    const recordSpan = document.createElement("span");
+    const recordDate = new Date(observation.recordingTime);
+    recordSpan.innerHTML = `${recordDate.toLocaleString('en-US')}`;
+
+    const applicSpan = document.createElement("span");
+    const applicDate = new Date(observation.applicabilityTime);
+    applicSpan.innerHTML = `${applicDate.toLocaleString('en-US')}`;
+
+    div.appendChild(recordSpan);
+    div.appendChild(applicSpan);
+
+    return div;
+}
+
+function obsButtons(observation) {
+    const div = document.createElement("div");
+    
+    if (observation.status == "ACTIVE") {
+        div.classList.add("obs-buttons");
+        const rejectButton = document.createElement("button");
+        rejectButton.innerHTML = "Reject";
+        rejectButton.addEventListener('click', function() {
+            rejectObservation(observation);
+        });
+        div.appendChild(rejectButton);
+    }
+    return div;
+}
+
+
+//---------------------------------------------^-PATIENT OBSERVATION LIST-^---------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//--------------------------------------------V-OBSERVATION SELECTOR DIALOG-V-------------------------------------------
+
+const selectObservationWindow = document.getElementById("selectObservationWindow");
+const observationSelectionList = document.getElementById("observationSelectionList");
+const observationSelectedList = document.getElementById("observationSelectedList");
+
+let unselectedObservations = [];
+let selectedObservations = [];
+
+//-------------------CLOSING-------------------
+
+
+
+//-------------------OPENING-------------------
+async function openSelector() {
+    unselectedObservations = await getPatientObservations(globalPatient);
+    selectedObservations = [];
+
+    populateSelectionList();
+    populateSelectedList();
+    selectObservationWindow.showModal();
+}
+
+function populateSelectionList() {
+    fillGenericList(observationSelectionList, unselectedObservations, buildObservationSelectEntry);
+}
+function populateSelectedList() {
+    fillGenericList(observationSelectedList, selectedObservations, buildObservationSelectedEntry);
+}
+
+
+function buildObservationSelectEntry(li, observation) {
+    li.classList.add("observation");
+    
+    li.appendChild(obsHeader(observation))
+    li.appendChild(obsContent(observation));
+    li.appendChild(obsProtocol(observation));
+    li.appendChild(obsStatus(observation));
+    li.appendChild(obsTime(observation));
+    li.appendChild(obsSelectButtons(observation));
+}
+
+function buildObservationSelectedEntry(li, observation) {
+    li.classList.add("observation");
+    
+    li.appendChild(obsHeader(observation))
+    li.appendChild(obsContent(observation));
+    li.appendChild(obsProtocol(observation));
+    li.appendChild(obsStatus(observation));
+    li.appendChild(obsTime(observation));
+    li.appendChild(obsSelectedButtons(observation));
+}
+
+
+function obsSelectButtons(observation) {
+    const div = document.createElement("div");
+
+    div.classList.add("obs-buttons");
+    const selectButton = document.createElement("button");
+    selectButton.innerHTML = "+";
+    selectButton.addEventListener('click', function() {
+        selectObservation(observation);
+    });
+    div.appendChild(selectButton);
+    return div;
+    
+}
+
+function obsSelectedButtons(observation) {
+    const div = document.createElement("div");
+    div.classList.add("obs-buttons");
+
+    if (observation.status == "ACTIVE") {
+        const selectButton = document.createElement("button");
+        selectButton.innerHTML = "-";
+        selectButton.addEventListener('click', function() {
+            deselectObservation(observation);
+        });
+        div.appendChild(selectButton);
+        return div;
+    }
+}
+
+
+function selectObservation(observation) {
+    selectedObservations.push(observation);
+
+    const index = unselectedObservations.indexOf(observation);
+    unselectedObservations.splice(index, 1);
+
+    populateSelectedList();
+    populateSelectionList();
+}
+
+function deselectObservation(observation) {
+    unselectedObservations.push(observation);
+
+    const index = selectedObservations.indexOf(observation);
+    selectedObservations.splice(index, 1);
+    
+    populateSelectedList();
+    populateSelectionList();
+}
+
+
+
+//-------------------SUBMISSION-------------------
+
+
+async function getSelection() {
+    unselectedObservations = await getPatientObservations(globalPatient);
+    return new Promise((resolve) => {
+        const closeSelectorButton = document.getElementById("closeSelectorButton");
+        
+        selectedObservations = [];
+
+        populateSelectionList();
+        populateSelectedList();
+        selectObservationWindow.showModal();
+
+        const onConfirm = () => {
+            selectObservationWindow.close();
+            closeSelectorButton.removeEventListener("click", onConfirm);
+            console.log("hi")
+            resolve(selectedObservations);
+        };
+
+        
+        closeSelectorButton.addEventListener('click', onConfirm);
+    });
+}
+
+//--------------------------------------------^-OBSERVATION SELECTOR DIALOG-^-------------------------------------------
+
+
+
+
+
+
+
+
+
+//------------------------------------------------V-MEASUREMENT DIALOG-V------------------------------------------------
+
+const recordMeasurementWindow = document.getElementById("recordMeasurementWindow");
+
+
+//-------------------CLOSING-------------------
+const closeMeasurementButton = document.getElementById("closeMeasurementButton");
+closeMeasurementButton.addEventListener('click', function() {
+    recordMeasurementWindow.close();
+});
+
+
+//-------------------OPENING-------------------
+const recordMeasurementButton = document.getElementById("recordMeasurementButton");
+recordMeasurementButton.addEventListener('click', MeasurementButtonFunc);
+
+async function MeasurementButtonFunc() {
+    measurementForm.amount.value = null;
+    measurementForm.endTime.value = "";
+    fillTypeOptions();
+    fillMeasurementProtocolDropdown();
+    recordMeasurementWindow.showModal();
+}
+
+
+//-------------------TYPE DROPDOWN-------------------
+const typeDropdown = document.getElementById("typeDropdown");
+
+async function fillTypeOptions() {
+    const types = await getAllTypes();
+    typeDropdown.innerHTML = `<option value=null>Select...</option>`;
+
+    types.forEach(type => {
+        if(type.category == "QUANTITATIVE"){
+            const option = document.createElement("option"); 
+            option.value = JSON.stringify(type); ; 
+            option.textContent = type.name;
+            typeDropdown.appendChild(option);
+        }
+    });
+}
+
+typeDropdown.addEventListener("change", function(event) {
+    if (event.target.value != "null") {
+        const selectedType = JSON.parse(event.target.value); 
+        fillUnitOptions(selectedType.allowedUnits)
+    }
+    else {
+        unitDropdown.innerHTML = `<option value=null>Select a type.</option>`;
+    }
+});
+
+
+//-------------------UNIT DROPDOWN-------------------
+const unitDropdown = document.getElementById("unitDropdown");
+
+async function fillUnitOptions(units) {
+    unitDropdown.innerHTML = `<option value=null>Select...</option>`;
+
+    units.forEach(unit => {
+        const option = document.createElement("option"); 
+        option.value = unit.id; 
+        option.textContent = unit.symbol;
+        unitDropdown.appendChild(option);
+    });
+}
+
+
+//-------------------PROTOCOL DROPDOWN-------------------
+const measurementProtocolDropdown = document.getElementById("measurementProtocolDropdown");
+
+async function fillMeasurementProtocolDropdown() {
+    const protocols = await getAllProtocols();
+    measurementProtocolDropdown.innerHTML = `<option value=-1>(None)</option>`;
+
+    protocols.forEach(protocol => {
+        const option = document.createElement("option"); 
+        option.value = protocol.id; 
+        option.textContent = protocol.name;
+        measurementProtocolDropdown.appendChild(option);
+    });
+}
+
+
+//-------------------SUBMISSION-------------------
+const measurementForm = document.getElementById("measurementForm");
+measurementForm.onsubmit = async function() {
+    let endTimeInstant;
+    if (measurementForm.endTime.value === ""){
+        endTimeInstant = null;
+    } else {
+        const endTime = new Date(measurementForm.endTime.value);
+        endTimeInstant = endTime.toISOString();
+    }
+
+    const result = await submitCreateMeasurement(sender, globalPatient.patientId, measurementProtocolDropdown.value, endTimeInstant, JSON.parse(typeDropdown.value).id, unitDropdown.value, measurementForm.amount.value);
+    alert(result);
+    onObservationChange();
+};
+
+//------------------------------------------------^-MEASUREMENT DIALOG-^------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//------------------------------------------------V-CATEGORICAL DIALOG-V------------------------------------------------
+
+const recordObservationWindow = document.getElementById("recordObservationWindow");
+const categoricalForm = document.getElementById("categoricalForm");
+const categoricalEvidenceList = document.getElementById("categoricalEvidenceList");
+
+let selectedEvidence = [];
+
+async function selectEvidence() {
+    selectedEvidence = await getSelection();
+    showEvidence();
+}
+
+function showEvidence(){
+    fillGenericList(categoricalEvidenceList, selectedEvidence, buildRejecteeEntry);
+}
+
+const selectEvidenceButton = document.getElementById("selectEvidenceButton");
+selectEvidenceButton.addEventListener('click', selectEvidence);
+
+
+
+//-------------------CLOSING-------------------
+const closeCategoricalButton = document.getElementById("closeCategoricalButton");
+closeCategoricalButton.addEventListener('click', function() {
+    recordObservationWindow.close();
+});
+
+
+
+//-------------------OPENING-------------------
+const recordObservationButton = document.getElementById("recordObservationButton");
+recordObservationButton.addEventListener('click', observationButtonFunc);
+
+async function observationButtonFunc() {
+    selectedEvidence = [];
+    fillPhenomOptions();
+    fillCategoricalProtocolDropdown();
+    showEvidence();
+    recordObservationWindow.showModal();
+}
+
+
+
+
+//-------------------PROTOCOL DROPDOWN-------------------
+const categoricalProtocolDropdown = document.getElementById("categoricalProtocolDropdown");
+
+async function fillCategoricalProtocolDropdown() {
+    const protocols = await getAllProtocols();
+    categoricalProtocolDropdown.innerHTML = `<option value=-1>(None)</option>`;
+
+    protocols.forEach(protocol => {
+        const option = document.createElement("option"); 
+        option.value = protocol.id; 
+        option.textContent = protocol.name;
+        categoricalProtocolDropdown.appendChild(option);
+    });
+}
+
+//-------------------PHENOMENON DROPDOWN-------------------
+const phenomDropdown = document.getElementById("phenomDropdown");
+
+async function fillPhenomOptions() {
+    const types = await getAllPhenomena();
+    phenomDropdown.innerHTML = ``;
+
+    types.forEach(phenomenon => {
+        const option = document.createElement("option"); 
+        option.value = phenomenon.id; 
+        option.textContent = `${phenomenon.typeName}: ${phenomenon.name}`;
+        phenomDropdown.appendChild(option);
+    });
+}
+
+
+const evidenceDetails = document.getElementById("evidenceDetails");
+
+//-------------------SUBMISSION-------------------
+categoricalForm.onsubmit = async function() {
+    console.log("WHAT");
+    let endTimeInstant;
+    if (categoricalForm.endTime.value === ""){
+        endTimeInstant = null;
+    } else {
+        const endTime = new Date(categoricalForm.endTime.value);
+        endTimeInstant = endTime.toISOString();
+    }
+    
+    const evidenceIds = selectedEvidence.map(evident => evident.observationId);
+
+    const result = await submitCreateCategorical(sender, globalPatient.patientId, categoricalProtocolDropdown.value, endTimeInstant, phenomDropdown.value, categoricalForm.presenceDropdown.value, evidenceIds, evidenceDetails.value);
+    alert(result);
+    onObservationChange();
+};
+
+//------------------------------------------------^-CATEGORICAL DIALOG-^------------------------------------------------
+
+
+
+
+
+
+//-------------------------------------------------V-REJECTION DIALOG-V-------------------------------------------------
+
+const rejectionWindow = document.getElementById("rejectionWindow");
+const rejecteeList = document.getElementById("rejecteeList");
+const rejectorList = document.getElementById("rejectorList");
+
+const rejectSelectorButton = document.getElementById("rejectSelectorButton");
+rejectSelectorButton.addEventListener('click', selectRejectors);
+
+async function selectRejectors() {
+    rejectors = await getSelection();
+    showRejectors();
+}
+
+
+let rejectors = [];
+let rejectee;
+
+//-------------------CLOSING-------------------
+const closeRejectionButton = document.getElementById("closeRejectionButton");
+closeRejectionButton.addEventListener('click', function() {
+    rejectionWindow.close();
+});
+
+
+//-------------------OPENING-------------------
+async function rejectObservation(observation) {
+    rejectors = [];
+    rejectee = observation;
+
+    showRejectee(observation)
+    showRejectors();
+
+    rejectionWindow.showModal();
+}
+
+function showRejectee(observation) {
+    rejecteeList.innerHTML = "";
+    const li = document.createElement("li");
+    buildRejecteeEntry(li, observation)
+    rejecteeList.appendChild(li);
+}
+
+function showRejectors() {
+    fillGenericList(rejectorList, rejectors, buildRejecteeEntry);
+}
+
+function buildRejecteeEntry(li, observation) {
+    li.classList.add("observation");
+    
+    li.appendChild(obsHeader(observation))
+    li.appendChild(obsContent(observation));
+    li.appendChild(obsProtocol(observation));
+    li.appendChild(obsStatus(observation));
+    li.appendChild(obsTime(observation));
+}
+
+
+const rejectionReasonBox = document.getElementById("rejectionReasonBox");
+
+const submitRejectionButton = document.getElementById("submitRejectionButton");
+
+submitRejectionButton.addEventListener('click', async function() {
+    const reason = rejectionReasonBox.value;
+    const rejectorIds = rejectors.map(rejector => rejector.observationId);
+    const observationId = rejectee.observationId;
+    const result = await submitObservationRejection(observationId, rejectorIds, reason);
+    alert(result);
+    rejectionWindow.close();
+});
+
+
+//-------------------------------------------------^-REJECTION DIALOG-^-------------------------------------------------
+
+
+
+
+//------------------------------------------------V-EVALUATION DIALOG-V------------------------------------------------
+
+const evaluationWindow = document.getElementById("evaluationWindow");
+
+//-------------------CLOSING-------------------
+const closeDiagnosisButton = document.getElementById("closeDiagnosisButton");
+closeDiagnosisButton.addEventListener('click', function() {
+    evaluationWindow.close();
+});
+
+
+
+//-------------------OPENING-------------------
+const evaluateDiagnosisButton = document.getElementById("evaluateDiagnosisButton");
+evaluateDiagnosisButton.addEventListener('click', evaluateButtonFunc);
+
+async function evaluateButtonFunc() {
+    //await evaluateRules();
+    evaluationWindow.showModal();
+}
+
+
+function something(){
+    let out = `Evaluation results:\n`;
+                
+    phenomena.forEach(phenom => {
+            out = out + `${phenom.typeName}, ${phenom.name}\n`;
+    });
+
+    alert(out);
+}
+
+async function getPatientEvaluation() {
     const response = await fetch(host + "/patients/" + patient.patientId + "/evaluate");
         if (!response.ok) {
             throw new Error(`Response status: ${response.status}`);
         }
         const phenomena = await response.json();
     
-        let out = `Evaluation results:\n`;
-        
-        phenomena.forEach(phenom => {
-            out = out + `${phenom.typeName}, ${phenom.name}\n`;
-        });
-        alert(out);
+        return phenomena;
 }
+
+
+
+//------------------------------------------------^-EVALUATION DIALOG-^------------------------------------------------
+
+
+//update functions
+populateBio();
+populateObservationList();
+
+
+async function onObservationChange() {
+    populateObservationList();
+}
+
+
+
+//console.log(await getSelection());

@@ -4,12 +4,12 @@
     margin: 0;
     padding: 0;
     padding-top: 20px;
-    max-width: 500px;
+    max-width: 66%;
     margin-right: auto;
 }
 
 .patient-bio {
-
+    width: 25%;
 }
 
 .patient-observations {
@@ -18,18 +18,81 @@
     position: relative;
     padding: 0;
     margin: 0;
-    max-width: 70%;
+    max-width: 50%;
 }
 
-.patient-observations ul {
+.observationlist {
     height: 600px; 
     overflow: scroll;
+    border: 1px solid #ccc;
+    padding-left: 0;
 }
 
 .observation {
     border: 1px solid #ccc;
-    margin-bottom: 10px;
+    margin: 20px;
     padding: 10px;
     list-style-type: none;
     background-color: #f9f9f9;
+}
+
+.obs-header {
+    display: flex;
+    justify-content: space-between;
+    margin: 0;
+    padding: 0;
+}
+
+.obs-time {
+    display: flex;
+    justify-content: space-between;
+    margin: 0;
+    padding: 0;
+    padding: 10px;
+    border: 1px solid #b4b4b4;
+    background-color: #fbfbfb;
+}
+
+.obs-protocol {
+    padding: 10px;
+    border: 1px solid #b4b4b4;
+    background-color: #fbfbfb;
+}
+
+.obs-content {
+    padding: 10px;
+    border: 1px solid #9d9d9d;
+    background-color: #e8e8e8;
+}
+
+.rejection {
+    border: 2px solid #221515;
+    background-color: #ff000061;
+    padding: 10px;
+}
+
+.obs-buttons {
+    padding: 10px;
+    border: 1px solid #b4b4b4;
+    background-color: #fbfbfb;
+}
+
+.evidence {
+    border: 1px solid #838383;
+    background-color: #2bff0010;
+    padding: 10px;
+}
+
+.selector {
+    display: flex;
+    justify-content: space-evenly;
+    margin: 0;
+    padding: 0;
+    padding: 0px;
+    border: 1px solid #b4b4b4;
+    background-color: #fbfbfb;
+}
+
+.diagnosis {
+
 }

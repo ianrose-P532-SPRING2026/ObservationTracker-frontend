@@ -15,30 +15,77 @@
     <div class="patient-details">
         <div class="patient-bio">
             <h3>Patient Bio</h3>
-            <pre id="bio"></pre>
+            <strong id="patientNameText">Name: NAME HERE</strong> 
+            <br/>
+            <span id="dobText">Date of birth: MM/DD/YYYY</span>
+            <br/>
+            <label for="patientNotesText">Notes: </label>
+            <br/>
+            <textarea readonly id="patientNotesText" style="resize: none;">Here are some notes.</textarea>
+            <br/>
+            <button id="openPatientUpdateButton">Update</button>
+            <button id="delOrArcButton">Delete/Archive</button>
         </div>
 
         <div class="patient-observations">
             <h3>Patient Observations</h3>
-            <button id="recordMeasurement">Record Measurement</button>
-            <button id="recordObservation">Record Observation</button>
-            <button id="EVAL">Evaluate Rules</button>
-            <ul id="observationlist">
+            <button id="recordMeasurementButton">Record Measurement</button>
+            <button id="recordObservationButton">Record Observation</button>
+            <button id="evaluateDiagnosisButton">Evaluate Rules</button>
+            <hr>
+            <ul id="observationlist" class="observationlist">
                 <li class="observation">
-                    <pre>
+                    <div class="obs-header">
+                        <span>ID: N</span>
+                        <span>Observation Type: QUANTITATIVE</span>
+                    </div>
+                    <hr>
 
-                    </pre>    
+                    <div class="obs-content">
+                        <strong>Height:</strong> <span>2ft</span>
+                    </div>
+                    
+                    <div class="obs-protocol">
+                        <details>
+                            <summary>Protocol: NAME</summary>
+                            <div>
+                                <pre>Desc: Protocol DESC HERE</pre>
+                                <span>Accuracy: HIGH</span>
+                            </div>
+                        </details>
+                    </div>
+            
+                    
+                    <div class="rejection">
+                        <details>
+                            <summary><strong>Staus: REJECTED</strong></summary>
+                            <div>
+                               <span>Rejected by:</span>
+                                <ul>
+                                    <li>2. Height: 2.3ft</li>
+                                </ul>
+                                <p>Reason:</p>
+                                <pre>Here is some desc<pre>
+                            </div>
+                        </details>
+                    </div>
+
+                    <div class="obs-time">
+                        <span>Recorded: TIME</span>
+                        <span>Applicable until: TIME</span>
+                    </div>
+
+                    <div class="obs-buttons">
+                        <button>Reject</button>
+                    </div>
                 </li>
             </ul>
         </div>
     </div>    
 
-    <button id="updatePatient">Update</button>
-    <button id="deletePatient">Delete</button>
-
     <dialog id="updatePatientWindow">
         <h2>Patient Info</h2>
-        <form id="patientForm" method="dialog"> 
+        <form id="updatePatientForm" method="dialog"> 
             <label for="name">Name:</label>
             <input id="name" type="text" required> 
             <br/>
@@ -51,8 +98,8 @@
             <br/>
             <textarea id="notes" name="notes" rows="4" cols="50"></textarea>
             <br/>
-            <button type="submit" id="submitButton">Submit</button>
-            <button type="button" id="closeButton">Cancel</button>
+            <button type="submit" id="submitUpdateButton">Submit</button>
+            <button type="button" id="closeUpdateButton">Cancel</button>
         </form>
     </dialog>
 
@@ -62,17 +109,23 @@
         <form id="measurementForm" method="dialog"> 
 
             <label for="typeDropdown">Type:</label>
-            <select id="typeDropdown" required></select>
+            <select id="typeDropdown" required>
+                <option value=null>Select...</option>
+            </select>
             <br/>
 
-            <label for="protocolDropdownMEAS">Protocol(Optional):</label>
-            <select id="protocolDropdownMEAS"></select>
+            <label for="measurementProtocolDropdown">Protocol(Optional):</label>
+            <select id="measurementProtocolDropdown">
+                <option value=-1>(None)</option>
+            </select>
             <br/>
 
             <label for="amount">Value:</label>
-            <input id="amount" type="number" required> 
+            <input id="amount" required> 
+
             <select style="margin-bottom: 10px;" id="unitDropdown">
-                </select>
+                <option value=null>Select a type.</option>
+            </select>
             <br/>
 
             <label for="endTime">Applic. End Time(Optional):</label>
@@ -81,7 +134,7 @@
             <br/>
 
             <button type="submit" id="submitButton">Submit</button>
-            <button type="button" id="closeButtonMEAS">Cancel</button>
+            <button type="button" id="closeMeasurementButton">Cancel</button>
         </form>
     </dialog>
 
@@ -94,8 +147,8 @@
             <select id="phenomDropdown" required></select>
             <br/>
 
-            <label for="protocolDropdownCATE">Protocol(Optional):</label>
-            <select id="protocolDropdownCATE"></select>
+            <label for="categoricalProtocolDropdown">Protocol(Optional):</label>
+            <select id="categoricalProtocolDropdown"></select>
             <br/>
 
             <select id="presenceDropdown" required>
@@ -109,10 +162,102 @@
             <br/>
             <input id="endTime" type="datetime-local" style="margin-bottom: 10px;">
             <br/>
+            
+            <hr>
+
+            <div>
+                <h4>Evidence:</h4>
+                <button type="button" id="selectEvidenceButton">Select Evidence</button>
+                <ul id="categoricalEvidenceList">
+                    <li class="observation">
+                        <span>something go here</span>
+                        <button>Remove</button>
+                    </li>
+                </ul>
+                <label for="evidenceDetails">Details: </label>
+                <br/>
+                <textarea id="evidenceDetails" name="evidenceDetails" rows="4" cols="50"></textarea>
+            </div>
+            
+            <hr>
 
             <button type="submit" id="submitButton">Submit</button>
-            <button type="button" id="closeButtonCATE">Cancel</button>
+            <button type="button" id="closeCategoricalButton">Cancel</button>
         </form>
+    </dialog>
+
+
+    <dialog id="rejectionWindow" style="width: 1000px;">
+        <h2>Reject Observation</h2>
+        <div class="selector">
+            <div>
+                <h4>To reject:</h4>
+                <ul id="rejecteeList" class="observationlist" style="height: 300px;">
+                    <li class="observation">
+                        <span>rejectee go here</span>
+                    </li>
+                </ul>
+
+                <span>Reason: </span>
+                <br/>
+                <textarea id="rejectionReasonBox"></textarea>
+            </div>
+
+            <div>
+                <h4>Rejected by:</h4>
+                <button id="rejectSelectorButton">Select Rejectors</button>
+                <ul id="rejectorList" class="observationlist">
+                    <li class="observation">
+                        <span>rejector go here</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <button type="submit" id="submitRejectionButton">Submit</button>
+        <button type="button" id="closeRejectionButton">Cancel</button>
+    </dialog>
+
+
+    <dialog id="selectObservationWindow" style="width: 900px;">
+        <h2>Select Observations</h2>
+        <div class="selector">
+            <div>
+                <h4>Selected</h4>
+            
+                <ul id="observationSelectedList" class="observationlist">
+                    <li class="observation">
+                        <span>something go here</span>
+                        <button>Select</button>
+                    </li>
+                </ul>
+            </div>
+            
+            <div>
+                <h4>Unselected</h4>
+                <ul id="observationSelectionList" class="observationlist">
+                    <li class="observation">
+                        <span>something go here</span>
+                        <button>Select</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <button id="closeSelectorButton">Close</button>
+    </dialog>
+
+
+
+    <dialog id="evaluationWindow">
+        <h2>Diagnosis Results:</h2>
+        
+        <ul id="diagnosisList">
+            <li class="diagnosis">
+                <span>something go here</span>
+            </li>
+        </ul>
+        <button type="button" id="closeDiagnosisButton">Close</button>
     </dialog>
 
     <script type="module" src="./script.js" defer></script>
