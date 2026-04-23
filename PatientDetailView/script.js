@@ -2,6 +2,34 @@ import { host } from "../host.js"
 
 let sender = 1; //TheGuy
 
+const login = document.getElementById("login");
+
+login.addEventListener("change", function(event) {
+    sender = event.target.value;
+});
+
+async function getAllStaff() {
+    const response = await fetch(host + "/staff");
+    if (!response.ok) {
+        throw new Error(`Response status: ${response.status}`);
+    }
+    const staff = await response.json();
+    return staff;
+}
+
+async function fillLoginOptions() {
+    const staff = await getAllStaff();
+    login.innerHTML = `<option value=-1>Login...</option>`;
+    console.log(staff);
+    staff.forEach(staffMember => {
+        const option = document.createElement("option"); 
+        option.value = staffMember.id; 
+        option.textContent = staffMember.name;
+        login.appendChild(option);
+    });
+}
+fillLoginOptions();
+
 
 //--------------------------------------------------V-LIST POPULATING-V-------------------------------------------------
 
@@ -416,8 +444,11 @@ function measurementContent(observation) {
     typeStrong.innerHTML = `${observation.phenomenonType.name}: `;
 
     const amountSpan = document.createElement("span");
-    amountSpan.innerHTML = `${observation.amount}${observation.unit.symbol}`;
-
+    if (observation.anomaly == "") {
+        amountSpan.innerHTML = `${observation.amount}${observation.unit.symbol}`;
+    } else {
+        amountSpan.innerHTML = `${observation.amount}${observation.unit.symbol}    <br/><strong>ANOMALY: ${observation.anomaly}<\strong>`;
+    }
     div.appendChild(typeStrong);
     div.appendChild(amountSpan);
 
@@ -1073,29 +1104,113 @@ const evaluateDiagnosisButton = document.getElementById("evaluateDiagnosisButton
 evaluateDiagnosisButton.addEventListener('click', evaluateButtonFunc);
 
 async function evaluateButtonFunc() {
-    //await evaluateRules();
+    await evaluateRules();
     evaluationWindow.showModal();
 }
 
 
-function something(){
-    let out = `Evaluation results:\n`;
-                
-    phenomena.forEach(phenom => {
-            out = out + `${phenom.typeName}, ${phenom.name}\n`;
-    });
+const diagnosisList = document.getElementById("diagnosisList");
 
-    alert(out);
+async function evaluateRules() {
+    const diagnoses = await getPatientEvaluation();
+    fillGenericList(diagnosisList, diagnoses, buildDiagnosis);
+}
+
+function buildDiagnosis(li, diagnosis) {
+    li.classList.add("diagnosis");
+
+    const detail = document.createElement("details");
+
+    const summary = document.createElement("summary");
+    summary.innerHTML = `<strong>${diagnosis.typeName}: ${diagnosis.name} ${diagnosis.presence}<\strong>`;
+
+    const inner = document.createElement("div");
+
+    const ruleInfo = document.createElement("span");
+    ruleInfo.innerHTML = `Rule: ${diagnosis.rule.name}, ${diagnosis.rule.type}`;
+
+
+
+    const contribLabel = document.createElement("span");
+    contribLabel.innerHTML = `Due to: `;
+
+    const sublist = document.createElement("ul");
+    if (diagnosis.rule.type == "WEIGHTED") {
+        fillGenericList(sublist, diagnosis.contributors, buildWeightedContributor);
+    } else {
+        fillGenericList(sublist, diagnosis.contributors, buildOtherContributor);
+    }
+    inner.appendChild(ruleInfo);
+    inner.appendChild(document.createElement("br"));
+    inner.appendChild(document.createElement("br"));
+    inner.appendChild(contribLabel);
+    inner.appendChild(document.createElement("br"));
+    inner.appendChild(sublist);
+
+    const scoreInfo = document.createElement("span");
+    if (diagnosis.rule.type == "WEIGHTED"){
+            scoreInfo.innerHTML = `Score: ${diagnosis.total}/${diagnosis.threshold}`
+            inner.appendChild(scoreInfo);
+            inner.appendChild(document.createElement("br"));
+            inner.appendChild(document.createElement("br"));
+    } 
+
+    detail.appendChild(summary);
+    detail.appendChild(inner);
+
+    li.appendChild(detail);
+}
+
+
+
+function buildOtherContributor(li, contributor) {
+    li.classList.add("contributor");
+
+    const detail = document.createElement("details");
+
+    const summary = document.createElement("summary");
+    summary.innerHTML = `${contributor.criteria.typeName}: ${contributor.criteria.name} ${contributor.criteria.presence}`;
+
+    const inner = document.createElement("div");
+    const observationEntry = document.createElement("li");
+    buildRejecteeEntry(observationEntry, contributor.observation);
+
+    inner.appendChild(observationEntry);
+
+    detail.appendChild(summary);
+    detail.appendChild(inner);
+
+    li.appendChild(detail);
+}
+
+function buildWeightedContributor(li, contributor) {
+    li.classList.add("contributor");
+
+    const detail = document.createElement("details");
+
+    const summary = document.createElement("summary");
+    summary.innerHTML = `[+${contributor.criteria.weight}] ${contributor.criteria.typeName}: ${contributor.criteria.name} ${contributor.criteria.presence}`;
+
+    const inner = document.createElement("div");
+    const observationEntry = document.createElement("li");
+    buildRejecteeEntry(observationEntry, contributor.observation);
+
+    inner.appendChild(observationEntry);
+
+    detail.appendChild(summary);
+    detail.appendChild(inner);
+
+    li.appendChild(detail);
 }
 
 async function getPatientEvaluation() {
-    const response = await fetch(host + "/patients/" + patient.patientId + "/evaluate");
+    const response = await fetch(host + "/patients/" + globalPatient.patientId + "/evaluate");
         if (!response.ok) {
             throw new Error(`Response status: ${response.status}`);
         }
-        const phenomena = await response.json();
+        const diagnoses = await response.json();
     
-        return phenomena;
+        return diagnoses;
 }
 
 

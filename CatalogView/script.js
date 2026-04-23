@@ -1,6 +1,34 @@
 import { host } from "../host.js"
 let sender = 1; //TheGuy
 
+const login = document.getElementById("login");
+
+login.addEventListener("change", function(event) {
+    sender = event.target.value;
+});
+
+async function getAllStaff() {
+    const response = await fetch(host + "/staff");
+    if (!response.ok) {
+        throw new Error(`Response status: ${response.status}`);
+    }
+    const staff = await response.json();
+    return staff;
+}
+
+async function fillLoginOptions() {
+    const staff = await getAllStaff();
+    login.innerHTML = `<option value=-1>Login...</option>`;
+    console.log(staff);
+    staff.forEach(staffMember => {
+        const option = document.createElement("option"); 
+        option.value = staffMember.id; 
+        option.textContent = staffMember.name;
+        login.appendChild(option);
+    });
+}
+fillLoginOptions();
+
 
 //------------------------------------------------------PROTOCOL--------------------------------------------------------
 const windowPROTOCOL = document.getElementById("windowPROTOCOL");
@@ -117,6 +145,8 @@ formQUAL.onsubmit = async function() {
     loadedPhenomena = [];
 };
 
+
+
 async function submitCreateQual(sender, id, name, phenomena) {
     const PhenomenonTypeRequest = {sender: sender, id: id, name: name, category: "QUALITATIVE", allowedUnitIds: null, phenomena: phenomena};
     console.log("You entered: " + JSON.stringify(PhenomenonTypeRequest));
@@ -137,9 +167,37 @@ async function submitCreateQual(sender, id, name, phenomena) {
 const loadedPhenomenaList = document.getElementById("loadedPhenomenaList");
 const addPhenomButton = document.getElementById("addPhenomButton");
 const phenomInput = document.getElementById("phenom");
+
+const parentInput = document.getElementById("parentInput");
+
+async function fillParentOptions() {
+    const phenoms = loadedPhenomena;
+
+    parentInput.innerHTML = `<option value=-1>(root)</option>`;
+
+    phenoms.forEach(phenom => {
+        const option = document.createElement("option"); 
+        option.value = JSON.stringify(phenom);
+        option.textContent = phenom.name;
+        parentInput.appendChild(option);
+    });
+
+}
+
 addPhenomButton.addEventListener('click', function() {
-    loadedPhenomena.push(phenomInput.value)
+    console.log(parentInput.value);
+    let phenomRequest;
+
+    if(parentInput.value != "") {
+        console.log(JSON.parse(parentInput.value));
+        phenomRequest = {name: phenomInput.value, parentName: JSON.parse(parentInput.value).name};
+    } else {
+        phenomRequest = {name: phenomInput.value, parentName: null};
+    }
+     
+    loadedPhenomena.push(phenomRequest)
     fillList(loadedPhenomenaList, loadedPhenomena);
+    fillParentOptions();
 });
 
 
@@ -171,7 +229,13 @@ function fillList(list, loadedPhenomena) {
 
 function buildLoadedPhenom(li, phenom){    
     const text = document.createElement('span');
-    text.innerHTML=`${phenom}`;
+    let parentName;
+    if (phenom.parentName == null) {
+        parentName = "(root)"
+    } else {
+        parentName = phenom.parentName;
+    }
+    text.innerHTML=`${phenom.name} -> ${parentName}`;
 
     const removeButton = document.createElement('button');
     removeButton.addEventListener('click', function() {
@@ -193,6 +257,7 @@ const windowQUANT = document.getElementById("windowQUANT");
 
 const typeButtonQUANT = document.getElementById("typeButtonQUANT");
 typeButtonQUANT.addEventListener('click', function() {
+    fillRangeUnitOptions();
     fillUnitOptions();
     windowQUANT.showModal();
     loadedUnits = [];
@@ -215,7 +280,14 @@ formQUANT.onsubmit = async function() {
 
 async function submitCreateQuant(sender, id, name, loadedUnits) {
     const ids = loadedUnits.map(unit => unit.id); 
-    const PhenomenonTypeRequest = {sender: sender, id: id, name: name, category: "QUANTITATIVE", allowedUnitIds: ids, phenomena: null};
+    const lowerBound = document.getElementById("lowBound").value;
+    const upperBound = document.getElementById("highBound").value;
+    const rangeUnitId = JSON.parse(document.getElementById("rangeUnitDropdown").value).id;
+
+    const lowerAnomaly = document.getElementById("lowAnom").value;
+    const upperAnomaly = document.getElementById("highAnom").value;
+
+    const PhenomenonTypeRequest = {sender: sender, id: id, name: name, category: "QUANTITATIVE", allowedUnitIds: ids, phenomena: null, lowerBound: lowerBound, upperBound: upperBound, rangeUnitId: rangeUnitId, lowerAnomaly: lowerAnomaly, upperAnomaly: upperAnomaly};
     console.log("You entered: " + JSON.stringify(PhenomenonTypeRequest));
 
     const request = {
@@ -238,8 +310,27 @@ const unitDropdown = document.getElementById("unitDropdown");
 addUnitButton.addEventListener('click', function() {
     loadedUnits.push(JSON.parse(unitDropdown.value));
     fillUnitList(loadedUnitList, loadedUnits);
+    fillRangeUnitOptions();
 });
 
+
+
+const rangeUnitDropdown = document.getElementById("rangeUnitDropdown");
+
+
+async function fillRangeUnitOptions() {
+    const units = loadedUnits;
+
+    rangeUnitDropdown.innerHTML = `<option value=-1>Add a unit...</option>`;
+
+    units.forEach(unit => {
+        const option = document.createElement("option"); 
+        option.value = JSON.stringify(unit);
+        option.textContent = unit.symbol;
+        rangeUnitDropdown.appendChild(option);
+    });
+
+}
 
 async function fillUnitOptions() {
     const units = await getAllUnits();
@@ -327,9 +418,12 @@ formRULE.onsubmit = async function() {
 };
 
 async function submitCreateRule(sender, id, name, loadedArgs) {
-    const ids = loadedArgs.map(arg => arg.id); 
+    const args = loadedArgs.map(arg => arg.request); 
     const productId = JSON.parse(productDropdown.value).id;    
-    const RuleRequest = {sender: sender, id: id, name: name, argumentIds: ids, productId: productId};
+    const presence = document.getElementById("productPresenceDropDown").value;
+    const type = document.getElementById("ruleTypeDropdown").value;
+    const threshold = document.getElementById("threshold").value;
+    const RuleRequest = {sender: sender, id: id, name: name, arguments: args, productId: productId, productPresence: presence, type: type, threshold: threshold};
     console.log("You entered: " + JSON.stringify(RuleRequest));
 
     const request = {
@@ -352,8 +446,15 @@ const argDropdown = document.getElementById("argDropdown");
 const productDropdown = document.getElementById("productDropdown");
 
 addArgButton.addEventListener('click', function() {
-    console.log(unitDropdown.value)
-    loadedArgs.push(JSON.parse(argDropdown.value));
+    const weight = document.getElementById("weightThing").value;
+    const presence = document.getElementById("argPresenceDropDown").value;
+    const phenom = JSON.parse(argDropdown.value);
+
+    const criteriaRequest = {argId: phenom.id, presence: presence, weight: weight};
+    const criteria = {name: phenom.name, typeName: phenom.typeName, request: criteriaRequest};
+    loadedArgs.push(criteria);
+    
+    console.log(criteria);
     fillArgList(loadedArgList, loadedArgs);
 });
 
@@ -405,22 +506,22 @@ function fillArgList(list, loadedArgs) {
     list.innerHTML = ""; //clear all before populating
 
     //populating
-    loadedArgs.forEach(phenomenon => {
+    loadedArgs.forEach(arg => {
         const li = document.createElement('li');
-        buildLoadedArg(li, phenomenon);
+        buildLoadedArg(li, arg);
         
         list.appendChild(li);                       
     });
 }
 
 
-function buildLoadedArg(li, phenomenon){    
+function buildLoadedArg(li, arg){    
     const text = document.createElement('span');
-    text.innerHTML=`${phenomenon.typeName}, ${phenomenon.name}`;
+    text.innerHTML=`${arg.typeName}: ${arg.name} ${arg.request.presence} --- ${arg.request.weight}`;
 
     const removeButton = document.createElement('button');
     removeButton.addEventListener('click', function() {
-        removeArg(phenomenon);
+        removeArg(arg);
     });
     removeButton.innerHTML = "-";
     
@@ -489,7 +590,7 @@ function buildUnitListing(li, unit) {
     li.appendChild(document.createElement('br'));
     li.appendChild(text);
     li.appendChild(sublist);
-    li.appendChild(deleteUnitButton);
+    //li.appendChild(deleteUnitButton);
 }
 
 
@@ -552,7 +653,7 @@ function buildProtocolListing(li, protocol) {
     li.appendChild(desc);
     li.appendChild(acc);
     li.appendChild(document.createElement('br'));
-    li.appendChild(deleteButton);
+    //li.appendChild(deleteButton);
 }
 
 populateProtocolList();
@@ -593,7 +694,7 @@ function buildTypeListing(li, type) {
     const sublist = document.createElement('ul');
 
     if(type.category == "QUANTITATIVE"){
-        label.innerHTML = "Allowed Units: ";
+        label.innerHTML = `RANGE: ${type.lowerBound} - ${type.upperBound}${type.rangeUnit.symbol} <br/> ${type.lowerAnom}, ${type.upperAnom} <br/> Allowed Units: `;
         
         if (type.allowedUnits.length == 0){
             sublist.innerHTML = `<li style="list-style-type: none;">(none)</li>`;
@@ -612,7 +713,7 @@ function buildTypeListing(li, type) {
         } else {
             type.phenomena.forEach(phenomenon => {
                 const subli = document.createElement('li');
-                subli.innerHTML = `${phenomenon.name}`;
+                subli.innerHTML = `<strong>${phenomenon.name}</strong> -> ${phenomenon.treeString} ${phenomenon.typeName}`;
                 sublist.appendChild(subli);                       
             });
         }
@@ -631,7 +732,7 @@ function buildTypeListing(li, type) {
     li.appendChild(document.createElement('br'));
     li.appendChild(label);
     li.appendChild(sublist);
-    li.appendChild(deleteButton);
+    //li.appendChild(deleteButton);
 }
 
 populateTypeList();
@@ -676,11 +777,14 @@ function buildRuleListing(li, rule) {
     title.innerHTML=`${rule.id}. ${rule.name}`;
 
     const product = document.createElement('span');
-    product.innerHTML=`Diagnosis: ${rule.productConcept.typeName}, ${rule.productConcept.name}`;
+    product.innerHTML=`Diagnosis: ${rule.productConcept.typeName}, ${rule.productConcept.name} ${rule.productPresence}`;
 
     const label = document.createElement("span");
-    label.innerHTML = "Criteria: ";
-
+    if (rule.type == "WEIGHTED"){
+        label.innerHTML = `Threshold: ${rule.threshold} <br/><br/> Criteria: `;
+    } else {
+        label.innerHTML = `Criteria: `;
+    }
     const sublist = document.createElement('ul');
 
         
@@ -689,7 +793,12 @@ function buildRuleListing(li, rule) {
     } else {
         rule.argumentConcepts.forEach(phenomenon => {
             const subli = document.createElement('li');
-            subli.innerHTML = `${phenomenon.typeName}, ${phenomenon.name}`;
+            if (rule.type == "WEIGHTED") {
+                subli.innerHTML = `${phenomenon.typeName}, ${phenomenon.name} ${phenomenon.presence}  [+${phenomenon.weight}]`;
+            } else {
+                subli.innerHTML = `${phenomenon.typeName}, ${phenomenon.name} ${phenomenon.presence}`;
+            }
+            
             sublist.appendChild(subli);                       
         });
     }
@@ -706,7 +815,23 @@ function buildRuleListing(li, rule) {
     li.appendChild(document.createElement('br'));
     li.appendChild(label);
     li.appendChild(sublist);
-    li.appendChild(deleteButton);
+    //li.appendChild(deleteButton);
 }
 
 populateRuleList();
+
+
+
+
+
+const PREPOPBUTTON = document.getElementById("PREPOPBUTTON");
+
+PREPOPBUTTON.addEventListener('click', async function() {
+    if (confirm("Are you sure? (if you do this when the database isnt empty i honestly have no idea whatll happen)")){
+        const response = await fetch(host + "/prepop");
+        if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+        }
+        alert("ok try refreshing the page");
+    }
+});

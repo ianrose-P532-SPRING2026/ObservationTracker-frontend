@@ -2,6 +2,35 @@ import { host } from "../host.js"
 
 let sender = 1; //TheGuy
 
+const login = document.getElementById("login");
+
+login.addEventListener("change", function(event) {
+    sender = event.target.value;
+});
+
+async function getAllStaff() {
+    const response = await fetch(host + "/staff");
+    if (!response.ok) {
+        throw new Error(`Response status: ${response.status}`);
+    }
+    const staff = await response.json();
+    return staff;
+}
+
+async function fillLoginOptions() {
+    const staff = await getAllStaff();
+    login.innerHTML = `<option value=-1>Login...</option>`;
+    console.log(staff);
+    staff.forEach(staffMember => {
+        const option = document.createElement("option"); 
+        option.value = staffMember.id; 
+        option.textContent = staffMember.name;
+        login.appendChild(option);
+    });
+}
+fillLoginOptions();
+
+
 const newPatientWindow = document.getElementById("newPatientWindow");
 const newPatientButton = document.getElementById("newPatientButton");
 const submitButton = document.getElementById("submitButton");
@@ -23,6 +52,7 @@ form.onsubmit = async function() {
     const dobInstant = dob.toISOString();
     const result = await submitNewPatient(sender, -1, form.name.value, dobInstant, form.notes.value);
     alert(result);
+    getAllPatients();
 };
 
 

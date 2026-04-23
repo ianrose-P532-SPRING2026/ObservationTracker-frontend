@@ -13,8 +13,17 @@
 
     <a href="../index.html">Back to home</a>
 
-    <div class="thing">
+    <br/>
+    <select id="login">
+        <option value="-1">login...</option>
+    </select>
+    <br/>
 
+    <br/>
+    <button id="PREPOPBUTTON">!!POPULATE!!</button>
+    <br/>
+
+    <div class="thing">
 
 
         <div class="col">
@@ -152,10 +161,16 @@ see.
         <form id="formQUAL" method="dialog"> 
             <label for="name">Name:</label>
             <input id="name" type="text" required> 
+
+            
+            
             <br/>
 
             <div class="phenom-selector">
                 <input id="phenom" type="text" size="10" style="margin-top: 10px; margin-left: 10px;">
+                <label for="parentInput">-></label>
+                <select id="parentInput">
+                </select>
                 <button id="addPhenomButton" type="button">+</button>
                 <hr>
                 <ul id="loadedPhenomenaList" style="margin: 0;">
@@ -171,11 +186,32 @@ see.
     </dialog>
 
 
-    <dialog id="windowQUANT">
+    <dialog id="windowQUANT" style="width: 1000px; height: 800px;">
         <h2>Quantitative Phenomenon Type</h2>
         <form id="formQUANT" method="dialog"> 
             <label for="name">Name:</label>
             <input id="name" type="text" required>
+            <br/>
+            <br/>
+
+            <label for="highBound">Nominal Range: </label>
+            <input id="highBound">
+            <span> - </span>
+            <input id="lowBound">
+            <select id="rangeUnitDropdown">
+            </select>
+            <br/>
+            <br/>
+
+            <span>Anomaly Labels: </span>
+            <br/>
+            <label for="highAnom">High: </label>
+            <input id="highAnom">
+            <br/>
+            <label for="lowAnom">Low: </label>
+            <input id="lowAnom">
+            <br/>
+            <br/>
 
             <div class="unit-selector">
                 <select id="unitDropdown">
@@ -199,22 +235,52 @@ see.
             <label for="name">Name:</label>
             <input id="name" type="text" required>
             <br/>
+            <br/>
 
             <label for="productDropdown">Product: </label>
             <select id="productDropdown">   
             </select>
+            <select id="productPresenceDropDown">
+                <option value="PRESENT">Present</option>
+                <option value="ABSENT">Absent</option>   
+            </select>
             <br/>
+            <br/>
+            <label for="ruleTypeDropdown">Rule Type: </label>
+            <select id="ruleTypeDropdown">
+                <option value="CONJUNCTIVE">Conjunctive</option>
+                <option value="WEIGHTED">Weighted</option>   
+            </select>
+            <br/>
+
+            <label for="threshold">Threshold: </label>
+            <input id="threshold">
+
+            <br/>
+            <br/>
+
+            
 
             <span>Criteria: </span>
             <div class="arg-selector">
+                
                 <select id="argDropdown">
                 </select>
+                <select id="argPresenceDropDown">
+                    <option value="PRESENT">Present</option>
+                    <option value="ABSENT">Absent</option>   
+                </select>
+                <label for="weightThing">Weight: </label>
+                <input id="weightThing">
                 <button id="addArgButton" type="button">+</button>
                 <hr>
+
                 <ul id="loadedArgList" style="margin: 0;">
                     <li style="text-align: center; list-style-type: none;">(none)</li>
                 </ul>
             </div>
+            <br/>
+            <br/>
             
             <button type="submit" id="submitButton">Submit</button>
             <button type="button" id="closeButtonRULE">Cancel</button>
